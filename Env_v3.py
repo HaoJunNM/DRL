@@ -2,8 +2,9 @@
 from gym import Env, spaces
 from gym.spaces import Discrete, Box
 import numpy as np
+import math
 
-class BiasEnv_v2(Env):
+class BiasEnv_v3(Env):
     def __init__(self, **kwargs):
         # Actions we can take, price range from 5 to 10
         self.size = 6
@@ -56,10 +57,13 @@ class BiasEnv_v2(Env):
         if total_load<40:
             return voltage,v_cost
         else:
+            Jain_index = total_load^2/(self.size * sum((self._load * self._load)))
+            Jain_alpha = (1-Jain_index+math.sqrt(1-Jain_index))/Jain_index
             for i in range(0,len(self._load)):
+                voltage[i] = self._load^Jain_alpha
                 seed = np.random.randint(0,5+i)
                 if seed>3:
-                    voltage[i] = (self._voltage[i]-5+1)*0.1+1
+                    voltage[i] = (self._voltage[i]-5+1)*0.1+1 - voltage[i]
                     v_cost -= 20
             return voltage, v_cost
     
@@ -77,7 +81,7 @@ class BiasEnv_v2(Env):
         return observation
 
 if __name__ == '__main__':
-    env = BiasEnv_v2()
+    env = BiasEnv_v3()
     print(env.action_space.sample())
     print(env.observation_space.sample())
 
